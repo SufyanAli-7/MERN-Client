@@ -60,6 +60,7 @@ const Login = () => {
                 <Form.Item label="Password" required>
                   <Input.Password size="large" placeholder="Enter Your Password" name='password' onChange={handleChange} />
                 </Form.Item>
+                <Paragraph> <Link to="/auth/forgot-password">Forgot Password?</Link></Paragraph>
               </Col>
               <Col span={24} >
                 <Button type="primary" size='large' block htmlType='submit' loading={isProcessing} onClick={handleLogin}>
