@@ -5,7 +5,7 @@ const Maps = () => {
   return (
     <div className="container">
         <Row>
-            <Col>
+            <Col span={24} className="text-center">
                 <Title>Maps</Title>
             </Col>
         </Row>

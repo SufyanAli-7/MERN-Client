@@ -5,7 +5,7 @@ const Services = () => {
   return (
     <div className="container">
         <Row>
-            <Col>
+            <Col span={24} className="text-center">
                 <Title>Services</Title>
             </Col>
         </Row>
