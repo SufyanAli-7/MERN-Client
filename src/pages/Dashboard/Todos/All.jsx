@@ -1,4 +1,5 @@
-import { Typography, Button, Space, Table } from "antd"
+import { DeleteOutlined, EditOutlined, MoreOutlined } from "@ant-design/icons"
+import { Typography, Button, Space, Table, Dropdown } from "antd"
 import dayjs from "dayjs"
 import { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
@@ -11,10 +12,19 @@ const All = () => {
 
   useEffect(() => {
     const todos = JSON.parse(localStorage.getItem("todos")) || []
-    setTodos(todos)
-  }, [])
+    setTodos(todos.map(todo => ({ ...todo, key: todo.id })))
+  },[])
 
   console.log("todos", todos)
+
+  const handelDelete = (record) => {
+    console.log("record", record)
+    const filteredTodos = todos.filter(todo => todo.id !== record.id)
+    setTodos(filteredTodos)
+    localStorage.setItem("todos", JSON.stringify(filteredTodos))
+     window.toastify("Todo deleted successfully", "success")
+  }
+
   const columns = [
     {
       title: 'Title',
@@ -51,10 +61,22 @@ const All = () => {
       title: 'Action',
       key: 'action',
       render: (_, record) => (
-        <Space size="medium">
-          <a>Edit</a>
-          <a>Delete</a>
-        </Space>
+        <Dropdown menu={{
+          items:[
+            {
+              label:"Edit",
+              key:"edit",
+              icon:<EditOutlined style={{color:"blue"}} onClick={() => { Navigate(`/dashboard/todos/edit/${record.id}`) }} />
+            },
+            {
+              label:"Delete",
+              key:"delete",
+              icon:<DeleteOutlined style={{color:"red"}} onClick={() => {handelDelete(record)}} />
+            }
+          ]
+        }} trigger={'click'}>
+          <Button className="border-0" icon={<MoreOutlined />} />
+        </Dropdown>
       ),
     },
   ];
