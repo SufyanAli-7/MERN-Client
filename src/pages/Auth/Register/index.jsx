@@ -1,5 +1,6 @@
 import { Col, Form, Row, Typography, Input, Button } from "antd"
-import { isValidElement, useState } from "react"
+import axios from "axios"
+import { useState } from "react"
 import { Link } from "react-router-dom"
 const { Title, Paragraph } = Typography
 
@@ -25,19 +26,29 @@ const Register = () => {
     if (password !== confirmPassword) {
       return window.toastify("Passwords do not match", "error")
     }
+
+    const user = { fullName, email, password }
+
     setIsProcessing(true)
-    const user = { uid: window.getRandomId(), fullName, email, password, role: "customer" }
-    const users = JSON.parse(localStorage.getItem("users") || "[]")
-    if (users.some(u => u.email === email)) {
-      setIsProcessing(false)
-      return window.toastify("User already exists.", "error")
-    }
-    users.push(user)
-    localStorage.setItem("users", JSON.stringify(users))
-    window.toastify("Registration successful! You can now login.", "success")
-    setTimeout(() => {
-      setIsProcessing(false)
-    }, 1000)
+
+    axios.post('http://localhost:8000/auth/register', user)
+      .then(res => {
+        const { status, data } = res
+        if (status === 201) {
+          return window.toastify(data.message, "success")
+        }
+      })
+      .catch(err => {
+        const { data, status } = err.response
+        if (status === 401) {
+          return window.toastify(data.message || "Registration failed. Please try again.", "error")
+        }
+        return window.toastify("Registration failed. Please try again.", "error")
+      })
+      .finally(() => {
+        setIsProcessing(false)
+      })
+
   }
 
   return (
