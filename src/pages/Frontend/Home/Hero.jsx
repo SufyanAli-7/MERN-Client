@@ -9,7 +9,9 @@ const Hero = () => {
         <Row>
             <Col span={24} className="text-center mt-4">
                 <Title level={1} className="text-center">Hero</Title>
-                <Paragraph className="text-center">Welcome <span className="fw-bold">{user.fullName || user.email}</span> to our website!</Paragraph>
+                <Paragraph className="text-center fw-semibold">uid: {user?.uid}</Paragraph>
+                <Paragraph className="text-center">Welcome <span className="fw-bold text-bg-danger p-1 px-2 rounded shadow">{user?.fullName || "User"}</span> to our website!</Paragraph>
+                <Paragraph className="text-center fw-semibold">Email: {user?.email}</Paragraph>
             </Col>
         </Row>
     </div>

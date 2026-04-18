@@ -1,3 +1,4 @@
+import axios from "axios"
 import { createContext, useContext, useEffect, useState } from "react"
 
 const Auth = createContext()
@@ -8,26 +9,33 @@ const AuthContext = ({ children }) => {
     const [state, setState] = useState(initialState)
     const [isAppLoading, setIsAppLoading] = useState(true)
 
-    const readProfile = () => {
-        const user = JSON.parse(localStorage.getItem("user"))
-        if (user) {
-            setState({ isAuth: true, user })
-        }
-        setTimeout(() => {
-            setIsAppLoading(false)
-        }, 1000)
+    const readProfile = (token) => {
+        
+        axios.get("http://localhost:8000/auth/user", { headers: { Authorization: `Bearer ${ token || localStorage.getItem("token") }` } })
+            .then(res => {
+                const { status, data } = res
+                if (status === 200) {
+                    setState({ isAuth: true, user: data.user })
+                }
+            })
+            .catch(err => {
+                   console.error("Error fetching user profile:", err)
+            })
+            .finally(() => {
+                setIsAppLoading(false)
+            })
     }
     useEffect(() => {
         readProfile()
     }, [])
 
     const handleLogout = () => {
-        localStorage.removeItem("user")
+        localStorage.removeItem("token")
         setState(initialState)
     }
 
     return (
-        <Auth.Provider value={{ ...state, isAppLoading, handleLogout , dispatch : setState}}>
+        <Auth.Provider value={{ ...state, isAppLoading, handleLogout , dispatch : setState , readProfile }}>
             {children}
         </Auth.Provider>
     )

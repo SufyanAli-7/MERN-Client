@@ -2,13 +2,14 @@ import { Col, Form, Row, Typography, Input, Button } from "antd"
 import { useState } from "react"
 import { Link, useNavigate } from "react-router-dom"
 import { useAuth } from "@/context/Auth"
+import axios from "axios"
 const { Title, Paragraph } = Typography
 
 const initialState = { email: "", password: "" }
 
 const Login = () => {
 
-  const { dispatch } = useAuth()
+  const { dispatch, readProfile } = useAuth()
   const [state, setState] = useState(initialState)
   const [isProcessing, setIsProcessing] = useState(false)
   const navigate = useNavigate()
@@ -16,28 +17,30 @@ const Login = () => {
   const handleChange = e => setState(state => ({ ...state, [e.target.name]: e.target.value }))
 
   const handleLogin = () => {
-    let { email, password } = state
-    if (!window.isValidEmail(email)) {
-      return window.toastify("Please enter a valid email address", "error")
-    }
-    if (password.length < 6) {
-      return window.toastify("Password must be at least 6 characters", "error")
-    }
-    setIsProcessing(true)
-    const users = JSON.parse(localStorage.getItem("users") || "[]")
-    const user = users.find(u => u.email === email && u.password === password)
-    if (!user) {
-      setIsProcessing(false)
-      return window.toastify("Invalid email or password.", "error")
+    let { email, password } = state   
+    const userData = { email, password }
+    if (!email || !password) {
+      return window.toastify("Please fill in all fields.", "error")
     }
 
-    setTimeout(() => {
-      localStorage.setItem("user", JSON.stringify(user))
-      dispatch({ isAuth: true, user })
-      window.toastify("Login successful!", "success")
-      navigate("/")
-      setIsProcessing(false)
-    }, 1000)
+    setIsProcessing(true)
+
+    axios.post("http://localhost:8000/auth/login", userData)
+      .then(res => {
+        const { status, data } = res
+        if ( status === 200 ) {
+          localStorage.setItem("token", data.token)
+          readProfile(data.token)
+          window.toastify(data.message, "success")
+        }
+      })
+      .catch(err => {
+        console.error("Login error:", err)
+        window.toastify(err.response.data.message, "error")
+      })    
+      .finally(() => {
+        setIsProcessing(false)
+      })
   }
 
   return (

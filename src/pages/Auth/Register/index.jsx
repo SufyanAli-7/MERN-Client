@@ -1,12 +1,13 @@
 import { Col, Form, Row, Typography, Input, Button } from "antd"
 import axios from "axios"
 import { useState } from "react"
-import { Link } from "react-router-dom"
+import { Link, useNavigate } from "react-router-dom"
 const { Title, Paragraph } = Typography
 
 const initialState = { fullName: "", email: "", password: "", confirmPassword: "" }
 
 const Register = () => {
+  const navigate = useNavigate()
   const [state, setState] = useState(initialState)
   const [isProcessing, setIsProcessing] = useState(false)
   const handleChange = e => setState(state => ({ ...state, [e.target.name]: e.target.value }))
@@ -35,6 +36,7 @@ const Register = () => {
       .then(res => {
         const { status, data } = res
         if (status === 201) {
+          navigate("/auth/login")
           return window.toastify(data.message, "success")
         }
       })
