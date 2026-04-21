@@ -1,5 +1,6 @@
 import { DeleteOutlined, EditOutlined, MoreOutlined } from "@ant-design/icons"
-import { Typography, Button, Space, Table, Dropdown } from "antd"
+import { Typography, Button, Space, Table, Dropdown, Image } from "antd"
+import axios from "axios"
 import dayjs from "dayjs"
 import { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
@@ -8,24 +9,53 @@ const { Title,Text } = Typography
 
 const All = () => {
   const Navigate = useNavigate()
+  const [isLoading, setIsLoading] = useState(false)
   const [todos, setTodos] = useState([])
 
   useEffect(() => {
-    const todos = JSON.parse(localStorage.getItem("todos")) || []
-    setTodos(todos.map(todo => ({ ...todo, key: todo.id })))
+    setIsLoading(true)
+        const token = localStorage.getItem("token")
+        axios.get('http://localhost:8000/todos/all', { headers: { Authorization: `Bearer ${token}` } })
+          .then((res) => {
+             const { status, data } = res
+              if (status === 200) {
+                const { todos } = data
+                setTodos(todos.map(todo => ({ ...todo, key: todo.id })))
+              }
+          })
+          .catch((error) => {
+            console.error(error)
+            window.toastify("Failed to fetch todos", "error")
+          })
+          .finally(() => {
+            setIsLoading(false)
+          })     
   },[])
 
-  console.log("todos", todos)
-
-  const handelDelete = (record) => {
-    console.log("record", record)
-    const filteredTodos = todos.filter(todo => todo.id !== record.id)
-    setTodos(filteredTodos)
-    localStorage.setItem("todos", JSON.stringify(filteredTodos))
-     window.toastify("Todo deleted successfully", "success")
+  const handelDelete = (todo) => {
+    const { id } = todo
+    const token = localStorage.getItem("token")
+    axios.delete(`http://localhost:8000/todos/single/${id}`, { headers: { Authorization: `Bearer ${token}` } })
+      .then((res) => {
+         const { status } = res
+         if (status === 200) {
+           window.toastify("Todo deleted successfully", "success")
+           const filteredTodos = todos.filter(t => t.id !== id)
+           setTodos(filteredTodos)
+         }
+      })
+      .catch((error) => {
+        console.error(error)
+        window.toastify("Failed to delete todo", "error")
+      })
   }
 
   const columns = [
+    {
+      title: 'Image',
+      dataIndex: 'imageURL',
+      render: imageURL => imageURL ? <Image src={imageURL} className="rounded-circle " width={64} height={64} /> : <Text type="secondary">No Image</Text>
+    },
     {
       title: 'Title',
       dataIndex: 'title',
@@ -87,7 +117,7 @@ const All = () => {
         <Title level={2} className="mb-0">Todos</Title>
         <Button type="primary" size="small" onClick={() => { Navigate("/dashboard/todos/add") }}>Add Todo</Button>
       </div>
-      <Table rowKey="id" columns={columns} dataSource={todos} />
+      <Table rowKey="id" columns={columns} dataSource={todos} loading={isLoading} />
     </main>
   )
 }

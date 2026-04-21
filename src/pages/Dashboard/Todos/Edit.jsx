@@ -3,6 +3,7 @@ import { useEffect, useState } from "react"
 import { useAuth } from "../../../context/Auth"
 import { useNavigate, useParams } from "react-router-dom"
 import dayjs from "dayjs"
+import axios from "axios"
 const { Title } = Typography
 const { Option } = Select
 
@@ -22,11 +23,21 @@ const Edit = () => {
   const [isAppLoading, setIsAppLoading] = useState(false)
   const handleChange = e => setState(s => ({ ...s, [e.target.name]: e.target.value }))
 
-  useEffect(() => {
+  useEffect(() => {    
     const { id } = params
-    const todos = JSON.parse(localStorage.getItem("todos")) || []
-    const todo = todos.find(t => t.id === id)
-    setState(todo)
+    axios.get(`http://localhost:8000/todos/single/${id}`, { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } })
+      .then((res) => {
+         const { status, data } = res
+         if (status === 200) {
+           const { todos } = data
+           setState(todos)
+         }
+      })
+      .catch((error) => {
+        console.error(error)
+        window.toastify("Failed to fetch todo", "error")
+      })
+
   }, [params])
 
   const handleUpdate = () => {
@@ -35,27 +46,24 @@ const Edit = () => {
     description = description.trim()
     if (!title || !description || !dueDate || !priority) { return window.toastify("Please fill all the fields", "error") }
     const todo = { id, title, description, dueDate, priority,status,isCompleted }
-    todo.updatedAt = new Date().getTime()
-
-    console.log("state", state)
-    console.log("todo", todo)
-
+   
     setIsAppLoading(true)
-
-    const todos = JSON.parse(localStorage.getItem("todos")) || []
-    const updatedTodos = todos.map(Item => {
-        if (Item.id === id) 
-            return {...Item, ...todo}
-        return Item
-    }) 
-
-    localStorage.setItem("todos", JSON.stringify(updatedTodos))
-
-    setTimeout(() => {
-      setIsAppLoading(false)
-      window.toastify("Todo updated successfully", "success")
-        Navigate("/dashboard/todos")
-    }, 1000);
+    const token = localStorage.getItem("token")
+    axios.patch('http://localhost:8000/todos/update', todo, { headers: { Authorization: `Bearer ${token}` } })
+      .then((res) => {
+         const { status, data } = res
+         if (status === 201) {
+           window.toastify("Todo updated successfully", "success")
+           Navigate("/dashboard/todos")
+         }
+      })
+      .catch((error) => {
+        console.error(error)
+        window.toastify("Failed to update todo", "error")
+      })
+      .finally(() => {
+        setIsAppLoading(false)
+      })
   }
 
 
